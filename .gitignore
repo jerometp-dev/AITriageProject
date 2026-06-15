@@ -1,0 +1,9 @@
+# Ignore local SQLite transaction records
+triage_history.db
+
+# Ignore Python runtime caches
+__pycache__/
+*.pyc
+
+# Ignore local environment files if you create them
+.env
