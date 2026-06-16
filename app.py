@@ -108,7 +108,7 @@ try:
     conn.close()
 
     if not df.empty:
-        st.dataframe(df[["message_id", "customer_id", "channel", "intent", "sentiment", "priority_score", "summary"]], use_container_width=True)
+        st.dataframe(df[["message_id", "customer_id", "channel", "intent", "sentiment", "priority_score", "summary"]], width='stretch')
         st.markdown("### 📈 Ticket Urgency Distribution Chart")
         priority_counts = df["priority_score"].value_counts().sort_index()
         st.bar_chart(priority_counts)
