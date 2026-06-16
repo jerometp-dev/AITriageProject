@@ -75,20 +75,24 @@ def save_to_db(msg_id: str, chan: str, cust_id: str, text: str, intent: str, sen
     except Exception as db_err:
         print(f"❌ Database error: {db_err}")
 
-def trigger_real_slack_alert(message_id: str, priority_score: int, intent: str, summary: str):
+async def trigger_real_slack_alert(message_id: str, priority_score: int, intent: str, summary: str):
+    import httpx
+    
     print(f"📡 [SLACK DISPATCHER] Alerting triage ops for ticket {message_id} [Priority {priority_score}]")
     
-    # 🔄 PASTE YOUR BRAND NEW VERIFIED URL HERE
     url = os.getenv("SLACK_WEBHOOK_URL") 
     
     payload = {
         "text": f"🚨 *CRITICAL TICKET ESCALATION* 🚨\n\n*ID:* {message_id}\n*Urgency:* {priority_score}/5\n*Category:* {intent.upper()}\n*Summary:* {summary}"
     }
+    
     try:
-        res = requests.post(url, json=payload, timeout=5)
-        print(f"📢 Slack webhook status code: {res.status_code}")
+        # Use the non-blocking async client to dispatch the payload
+        async with httpx.AsyncClient() as client:
+            res = await client.post(url, json=payload, timeout=5.0)
+            print(f"📢 Async Slack webhook status code: {res.status_code}")
     except Exception as e:
-        print(f"❌ Failed to dispatch Slack webhook notification: {e}")
+        print(f"❌ Failed to dispatch async Slack webhook notification: {e}")
 
 def route_to_human_queue(ticket_id: str, analysis: TriageAnalysis):
     print(f"📥 [HUMAN PIPELINE] Logging ticket {ticket_id} into ZenDesk enterprise CRM matrix.")
