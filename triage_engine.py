@@ -1,7 +1,8 @@
 # ⚙️ 1. ALWAYS LOAD ENVIRONMENT VARIABLES FIRST!
+from fastapi import FastAPI, HTTPException, BackgroundTasks, Security, Depends
+from fastapi.security.api_key import APIKeyHeader
 from dotenv import load_dotenv
 load_dotenv()
-
 import sqlite3
 import os
 import json
@@ -12,6 +13,16 @@ from pydantic import BaseModel, Field
 from groq import Groq 
 
 app = FastAPI(title="AI Support Triage Engine")
+
+API_KEY_NAME = "X-Triage-Token"
+api_key_header = APIKeyHeader(name=API_KEY_NAME, auto_error=False)
+
+def verify_api_key(api_key: str = Depends(api_key_header)):
+    # This is the secret value your backend expects. We pull it from .env or default to a static string
+    expected_key = os.getenv("INTERNAL_API_TOKEN", "super_secret_handshake_key_123")
+    if api_key != expected_key:
+        raise HTTPException(status_code=403, detail="Unauthorized: Access to Triage Core Denied.")
+    return api_key
 
 def init_db():
     conn = sqlite3.connect("triage_history.db")
@@ -101,7 +112,11 @@ def route_to_automated_bot(ticket_id: str, content: str, intent: str):
     print(f"🤖 [AUTO-BOT WORKFLOW] Intercepted message {ticket_id} for resolution.")
 
 @app.post("/webhook/triage")
-async def triage_incoming_message(payload: InboundMessage, background_tasks: BackgroundTasks):
+async def triage_incoming_message(
+    payload: InboundMessage, 
+    background_tasks: BackgroundTasks,
+    api_key: str = Depends(verify_api_key)  # 🔒 THIS LOCKS THE ENTIRE ENDPOINT!
+):
     try:
         bot_draft = "Thank you for reaching out! Our business hours are Monday through Saturday 9:00 AM to 6:00 PM. We are closed on Sundays."
 

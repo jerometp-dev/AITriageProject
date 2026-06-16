@@ -49,7 +49,10 @@ with col1:
         
         with st.spinner("Processing omnichannel triage pipelines..."):
             try:
-                response = requests.post("http://127.0.0.1:8000/webhook/triage", json=payload)
+                headers = {
+                    "X-Triage-Token": "super_secret_handshake_key_123"  # Must match the token value checked by the backend
+                }
+                response = requests.post("http://127.0.0.1:8000/webhook/triage", json=payload, headers=headers)
                 
                 with col2:
                     st.subheader("⚙️ AI Triage Gateway Outputs")
