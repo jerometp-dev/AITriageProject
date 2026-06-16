@@ -1,3 +1,7 @@
+# ⚙️ 1. ALWAYS LOAD ENVIRONMENT VARIABLES FIRST!
+from dotenv import load_dotenv
+load_dotenv()
+
 import sqlite3
 import os
 import json
@@ -5,7 +9,6 @@ from typing import Literal
 import requests
 from fastapi import FastAPI, HTTPException, BackgroundTasks
 from pydantic import BaseModel, Field
-# 🔄 Swapped out Google GenAI for the official Groq client
 from groq import Groq 
 
 app = FastAPI(title="AI Support Triage Engine")
@@ -31,8 +34,9 @@ def init_db():
 
 init_db()
 
-# 🔑 Reads GROQ_API_KEY from your terminal environment variables
-client = Groq()
+# 🔑 2. Explicitly pull the key from your loaded .env file
+client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+
 
 class TriageAnalysis(BaseModel):
     intent: Literal["billing_issue", "technical_support", "account_access", "general_inquiry"] = Field(
@@ -55,9 +59,28 @@ class InboundMessage(BaseModel):
     customer_id: str
     text_content: str
 
+# 🛠️ MOVED OUT OF METRIC LOOP: Dedicated DB logger execution function
+def save_to_db(msg_id: str, chan: str, cust_id: str, text: str, intent: str, sent: str, score: int, summ: str, action: str):
+    try:
+        conn = sqlite3.connect("triage_history.db")
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT OR REPLACE INTO tickets
+            (message_id, channel, customer_id, text_content, intent, sentiment, priority_score, summary, recommended_action)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (msg_id, chan, cust_id, text, intent, sent, score, summ, action))
+        conn.commit()
+        conn.close()
+        print(f"💾 Ticket {msg_id} successfully saved to local log database!")
+    except Exception as db_err:
+        print(f"❌ Database error: {db_err}")
+
 def trigger_real_slack_alert(message_id: str, priority_score: int, intent: str, summary: str):
     print(f"📡 [SLACK DISPATCHER] Alerting triage ops for ticket {message_id} [Priority {priority_score}]")
-    url = "https://hooks.slack.com/services/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"
+    
+    # 🔄 PASTE YOUR BRAND NEW VERIFIED URL HERE
+    url = "https://hooks.slack.com/services/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" 
+    
     payload = {
         "text": f"🚨 *CRITICAL TICKET ESCALATION* 🚨\n\n*ID:* {message_id}\n*Urgency:* {priority_score}/5\n*Category:* {intent.upper()}\n*Summary:* {summary}"
     }
@@ -79,7 +102,6 @@ async def triage_incoming_message(payload: InboundMessage, background_tasks: Bac
         bot_draft = "Thank you for reaching out! Our business hours are Monday through Saturday 9:00 AM to 6:00 PM. We are closed on Sundays."
 
         # --- PHASE 1: HIGH-SPEED STRUCTURED PARSING VIA GROQ ---
-        # Forces the Llama model to comply directly with your Pydantic JSON schema
         analysis_response = client.chat.completions.create(
             model="llama-3.3-70b-versatile",
             messages=[
@@ -116,21 +138,6 @@ async def triage_incoming_message(payload: InboundMessage, background_tasks: Bac
             bot_draft = "Our engineering team has been notified of this system interference. We are investigating account access options."
 
         # --- PHASE 4: HISTORICAL LOGGING & PIPELINE EXECUTION ---
-        def save_to_db(msg_id, chan, cust_id, text, intent, sent, score, summ, action):
-            try:
-                conn = sqlite3.connect("triage_history.db")
-                cursor = conn.cursor()
-                cursor.execute("""
-                    INSERT OR REPLACE INTO tickets
-                    (message_id, channel, customer_id, text_content, intent, sentiment, priority_score, summary, recommended_action)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """, (msg_id, chan, cust_id, text, intent, sent, score, summ, action))
-                conn.commit()
-                conn.close()
-                print(f"💾 Ticket {msg_id} successfully saved to local log database!")
-            except Exception as db_err:
-                print(f"❌ Database error: {db_err}")
-
         background_tasks.add_task(
             save_to_db, 
             payload.message_id, payload.channel, payload.customer_id, payload.text_content,
