@@ -79,7 +79,7 @@ def trigger_real_slack_alert(message_id: str, priority_score: int, intent: str, 
     print(f"📡 [SLACK DISPATCHER] Alerting triage ops for ticket {message_id} [Priority {priority_score}]")
     
     # 🔄 PASTE YOUR BRAND NEW VERIFIED URL HERE
-    url = "https://hooks.slack.com/services/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" 
+    url = os.getenv("SLACK_WEBHOOK_URL") 
     
     payload = {
         "text": f"🚨 *CRITICAL TICKET ESCALATION* 🚨\n\n*ID:* {message_id}\n*Urgency:* {priority_score}/5\n*Category:* {intent.upper()}\n*Summary:* {summary}"
