@@ -10,7 +10,9 @@ from typing import Literal
 import requests
 from fastapi import FastAPI, HTTPException, BackgroundTasks
 from pydantic import BaseModel, Field
-from groq import Groq 
+from groq import AsyncGroq
+
+client = AsyncGroq()
 
 app = FastAPI(title="AI Support Triage Engine")
 
@@ -18,9 +20,9 @@ API_KEY_NAME = "X-Triage-Token"
 api_key_header = APIKeyHeader(name=API_KEY_NAME, auto_error=False)
 
 def verify_api_key(api_key: str = Depends(api_key_header)):
-    # This is the secret value your backend expects. We pull it from .env or default to a static string
-    expected_key = os.getenv("INTERNAL_API_TOKEN", "super_secret_handshake_key_123")
-    if api_key != expected_key:
+    # Pull securely from environment setup without hardcoded fallback defaults
+    expected_key = os.getenv("INTERNAL_API_TOKEN")
+    if not expected_key or api_key != expected_key:
         raise HTTPException(status_code=403, detail="Unauthorized: Access to Triage Core Denied.")
     return api_key
 
@@ -45,8 +47,8 @@ def init_db():
 
 init_db()
 
-# 🔑 2. Explicitly pull the key from your loaded .env file
-client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+# Initialize the asynchronous Groq client correctly with your key!
+client = AsyncGroq(api_key=os.getenv("GROQ_API_KEY"))
 
 
 class TriageAnalysis(BaseModel):
@@ -121,7 +123,7 @@ async def triage_incoming_message(
         bot_draft = "Thank you for reaching out! Our business hours are Monday through Saturday 9:00 AM to 6:00 PM. We are closed on Sundays."
 
         # --- PHASE 1: HIGH-SPEED STRUCTURED PARSING VIA GROQ ---
-        analysis_response = client.chat.completions.create(
+        analysis_response = await client.chat.completions.create(
             model="llama-3.3-70b-versatile",
             messages=[
                 {
