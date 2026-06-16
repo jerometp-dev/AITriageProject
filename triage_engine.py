@@ -3,16 +3,13 @@ from fastapi import FastAPI, HTTPException, BackgroundTasks, Security, Depends
 from fastapi.security.api_key import APIKeyHeader
 from dotenv import load_dotenv
 load_dotenv()
+
 import sqlite3
 import os
 import json
 from typing import Literal
-import requests
-from fastapi import FastAPI, HTTPException, BackgroundTasks
 from pydantic import BaseModel, Field
 from groq import AsyncGroq
-
-client = AsyncGroq()
 
 app = FastAPI(title="AI Support Triage Engine")
 
@@ -47,9 +44,8 @@ def init_db():
 
 init_db()
 
-# Initialize the asynchronous Groq client correctly with your key!
+# Initialize the asynchronous Groq client ONCE cleanly using your environment key
 client = AsyncGroq(api_key=os.getenv("GROQ_API_KEY"))
-
 
 class TriageAnalysis(BaseModel):
     intent: Literal["billing_issue", "technical_support", "account_access", "general_inquiry"] = Field(
@@ -72,7 +68,6 @@ class InboundMessage(BaseModel):
     customer_id: str
     text_content: str
 
-# 🛠️ MOVED OUT OF METRIC LOOP: Dedicated DB logger execution function
 def save_to_db(msg_id: str, chan: str, cust_id: str, text: str, intent: str, sent: str, score: int, summ: str, action: str):
     try:
         conn = sqlite3.connect("triage_history.db")
@@ -92,7 +87,6 @@ async def trigger_real_slack_alert(message_id: str, priority_score: int, intent:
     import httpx
     
     print(f"📡 [SLACK DISPATCHER] Alerting triage ops for ticket {message_id} [Priority {priority_score}]")
-    
     url = os.getenv("SLACK_WEBHOOK_URL") 
     
     payload = {
@@ -101,14 +95,14 @@ async def trigger_real_slack_alert(message_id: str, priority_score: int, intent:
     
     try:
         # Use the non-blocking async client to dispatch the payload
-        async with httpx.AsyncClient() as client:
-            res = await client.post(url, json=payload, timeout=5.0)
+        async with httpx.AsyncClient() as async_client:
+            res = await async_client.post(url, json=payload, timeout=5.0)
             print(f"📢 Async Slack webhook status code: {res.status_code}")
     except Exception as e:
         print(f"❌ Failed to dispatch async Slack webhook notification: {e}")
 
 def route_to_human_queue(ticket_id: str, analysis: TriageAnalysis):
-    print(f"📥 [HUMAN PIPELINE] Logging ticket {ticket_id} into ZenDesk enterprise CRM matrix.")
+    print(f"📥 [HUMAN PIPELINE] Logging ticket {ticket_id} into primary helpdesk dashboard queue.")
 
 def route_to_automated_bot(ticket_id: str, content: str, intent: str):
     print(f"🤖 [AUTO-BOT WORKFLOW] Intercepted message {ticket_id} for resolution.")

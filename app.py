@@ -3,6 +3,11 @@ import pandas as pd
 import streamlit as st
 import requests
 import uuid
+import os
+from dotenv import load_dotenv
+
+# Load environment files cleanly at start
+load_dotenv()
 
 # Page configuration for a professional look
 st.set_page_config(page_title="AI Triage Control Center", page_icon="🤖", layout="wide")
@@ -50,7 +55,7 @@ with col1:
         with st.spinner("Processing omnichannel triage pipelines..."):
             try:
                 headers = {
-                    "X-Triage-Token": "super_secret_handshake_key_123"  # Must match the token value checked by the backend
+                    "X-Triage-Token": os.getenv("INTERNAL_API_TOKEN")
                 }
                 response = requests.post("http://127.0.0.1:8000/webhook/triage", json=payload, headers=headers)
                 
