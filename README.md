@@ -33,7 +33,7 @@ An automated, production-grade AI incident classification and orchestration engi
 └────────────────────────────────────────┘
 ```
 
-🛠️ Core Production Architectures
+## 🛠️ Core Production Architectures
 
 * Decoupled Asynchronous Processing: Offloads heavy downstream execution tasks (like hitting external Slack endpoints) to a background worker pool using Celery and Redis, maintaining lightning-fast API responses.
 * Context-Aware Local RAG: Queries an integrated ChromaDB instance to pull live company operational policies, dynamically appending factual data to the LLM context layer to eradicate AI hallucinations.
@@ -42,7 +42,7 @@ An automated, production-grade AI incident classification and orchestration engi
 
 * Thread-Safe Logbook Storage: Features an isolated, shared-cache SQLite historical engine configuration allowing concurrent read-writes without application deadlocks.
 
-🧰 Tech Stack
+## 🧰 Tech Stack
 
 * Frameworks: FastAPI, Streamlit, Celery
 
@@ -52,7 +52,7 @@ An automated, production-grade AI incident classification and orchestration engi
 
 * Validation & Testing: Pydantic v2, Python Unittest Framework
 
-🚀 Local Installation & Setup
+## 🚀 Local Installation & Setup
 
 1. Clone the Repository:
 
@@ -83,5 +83,5 @@ Create a .env file in the root directory:
 Execute the automated regression test suite to ensure everything is working:
 
        Bash
-       
+
        python test_triage.py
