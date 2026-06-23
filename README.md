@@ -34,11 +34,12 @@ An automated, production-grade AI incident classification and orchestration engi
 ```
 
 🛠️ Core Production Architectures
-Decoupled Asynchronous Processing: Offloads heavy downstream execution tasks (like hitting external Slack endpoints) to a background worker pool using Celery and Redis, maintaining lightning-fast API responses.
 
-Context-Aware Local RAG: Queries an integrated ChromaDB instance to pull live company operational policies, dynamically appending factual data to the LLM context layer to eradicate AI hallucinations.
+       Decoupled Asynchronous Processing: Offloads heavy downstream execution tasks (like hitting external Slack endpoints) to a background worker pool using Celery and Redis, maintaining lightning-fast API responses.
 
-Smart Escalation Fail-Safes: Enforces rigid automated routing pathways. Sensitive intents or high-priority tickets ($Urgency \ge 4/5$) bypass the bot response engine entirely and are instantly dispatched to live human chat queues.
+       Context-Aware Local RAG: Queries an integrated ChromaDB instance to pull live company operational policies, dynamically appending factual data to the LLM context layer to eradicate AI hallucinations.
+
+       Smart Escalation Fail-Safes: Enforces rigid automated routing pathways. Sensitive intents or high-priority tickets ($Urgency \ge 4/5$) bypass the bot response engine entirely and are instantly dispatched to live human chat queues.
 
 Thread-Safe Logbook Storage: Features an isolated, shared-cache SQLite historical engine configuration allowing concurrent read-writes without application deadlocks.
 
