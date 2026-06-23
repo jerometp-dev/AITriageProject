@@ -7,3 +7,8 @@ __pycache__/
 
 # Ignore local environment files if you create them
 .env
+
+.venv/
+
+
+chroma_db_storage/

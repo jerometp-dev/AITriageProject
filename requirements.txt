@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+pydantic
+groq
+chromadb
+celery
+redis
+httpx
+streamlit
+pandas
+python-dotenv
