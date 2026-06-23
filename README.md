@@ -48,14 +48,16 @@ An automated, production-grade AI incident classification and orchestration engi
 
 * AI & Vector Infrastructure: ChromaDB (Vector DB), Groq Cloud API (Llama 3.3 70B)
 
-Data & Transport Layers: Redis (In-memory Message Broker), SQLite (Historical Storage), HTTPX
+* Data & Transport Layers: Redis (In-memory Message Broker), SQLite (Historical Storage), HTTPX
 
-Validation & Testing: Pydantic v2, Python Unittest Framework
+* Validation & Testing: Pydantic v2, Python Unittest Framework
 
 🚀 Local Installation & Setup
+
 1. Clone the Repository:
 
        Bash
+
        git clone [https://github.com/jerometp-dev/AITriageProject.git](https://github.com/jerometp-dev/AITriageProject.git)
        cd AITriageProject
 
@@ -63,22 +65,23 @@ Validation & Testing: Pydantic v2, Python Unittest Framework
 2. Configure Environment Variables:
 Create a .env file in the root directory:
 
-Code snippet
+       Code snippet
 
-GROQ_API_KEY=your_groq_api_key
-SLACK_WEBHOOK_URL=your_slack_webhook_url
-INTERNAL_API_TOKEN=your_secure_local_token
+       GROQ_API_KEY=your_groq_api_key
+       SLACK_WEBHOOK_URL=your_slack_webhook_url
+       INTERNAL_API_TOKEN=your_secure_local_token
 
 3. Run the Infrastructure Services:
 
-Start FastAPI Backend: uvicorn triage_engine:app --reload
+* Start FastAPI Backend: uvicorn triage_engine:app --reload
 
-Start Background Worker: celery -A tasks worker --loglevel=info -P threads
+* Start Background Worker: celery -A tasks worker --loglevel=info -P threads
 
-Start Analytics Dashboard: streamlit run app.py
+* Start Analytics Dashboard: streamlit run app.py
 
 4. Verify the System:
 Execute the automated regression test suite to ensure everything is working:
 
-Bash
-python test_triage.py
+       Bash
+       
+       python test_triage.py
