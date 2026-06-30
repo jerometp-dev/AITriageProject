@@ -31,3 +31,20 @@ Before shipping any core modifications or updating client infrastructure, you mu
 
 ```bash
 python -m unittest test_triage.py
+```
+---
+
+## 5. System Access Controls & Token Rotation
+To prevent unauthorized ingestion payloads, the middleware layer enforces strict authorization token matching. 
+* **Authorization Scheme:** Secure Bearer Token validation via `INTERNAL_API_TOKEN`.
+* **Token Storage:** Encrypted within the local machine's `.env` cluster scope.
+* **Rotation Policy:** In production environments, client credentials and webhook secrets must be updated quarterly via the centralized credentials vault.
+
+## 6. Troubleshooting & Disaster Recovery
+If system processes drop or operational metrics stagnate, support engineers must execute the following triage workflow:
+
+| Incident Scenario | Primary Symptom | Resolution Action |
+| :--- | :--- | :--- |
+| **Broker Failure** | Celery workers fail to receive inbound triage alerts. | Verify local Redis connection health: run `redis-cli ping` to confirm `PONG` response. |
+| **API Rate-Limiting** | Groq Client throws HTTP `429` status codes. | The system automatically falls back to an exponential backoff retry scheme. If persistent, check API quota ceilings. |
+| **Database Lock** | SQLite historical engine rejects concurrent read-writes. | Confirm database shared-cache parameters are safely active within `triage_engine.py` configurations. |
